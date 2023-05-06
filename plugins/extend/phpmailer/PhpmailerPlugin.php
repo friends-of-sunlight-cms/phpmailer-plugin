@@ -33,7 +33,6 @@ class PhpmailerPlugin extends ExtendPlugin
             $mail->CharSet = PHPMailer::CHARSET_UTF8;
             $mail->Encoding = PHPMailer::ENCODING_BASE64;
             $mail->Priority = 1; // 1 = High, 3 = Normal, 5 = low
-            $mail->WordWrap = 78;
             $mail->XMailer = $args['headers']['X-Mailer'] ?? null;
 
             // recipients
