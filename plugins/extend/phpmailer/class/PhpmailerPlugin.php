@@ -3,7 +3,6 @@
 namespace SunlightExtend\Phpmailer;
 
 use PHPMailer\PHPMailer\PHPMailer;
-use Sunlight\Plugin\Action\PluginAction;
 use Sunlight\Plugin\ExtendPlugin;
 use Sunlight\Settings;
 
@@ -35,12 +34,15 @@ class PhpmailerPlugin extends ExtendPlugin
             $mail->Priority = 1; // 1 = High, 3 = Normal, 5 = low
             $mail->XMailer = $args['headers']['X-Mailer'] ?? null;
 
+            $senderEmail = $config['sender_email'] ?? Settings::get('sysmail');
+            $senderName = $config['sender_name'] ?? Settings::get('title');
+
             // recipients
             if (Settings::get('mailerusefrom')) {
-                $mail->setFrom($config['sender_email'], $config['sender_name']);
+                $mail->setFrom($senderEmail, $senderName);
             }
             $mail->addAddress($args['to']);
-            $mail->addReplyTo($config['sender_email']);
+            $mail->addReplyTo($senderEmail);
 
             // content
             $mail->isHTML(strpos(($args['headers']['Content-Type'] ?? ''), PHPMailer::CONTENT_TYPE_TEXT_HTML));
@@ -54,36 +56,7 @@ class PhpmailerPlugin extends ExtendPlugin
             $mail->send();
         } catch (\Exception $e) {
             // handled by a plugin - email sending failed
-            dump($e);
             $args['result'] = false;
         }
-
     }
-
-    protected function getConfigDefaults(): array
-    {
-        return [
-            'use_smtp' => true,
-            'smtp_secure' => PHPMailer::ENCRYPTION_STARTTLS,
-            'smtp_auth' => true,
-            'smtp_host' => '',
-            'smtp_port' => 587,
-            'smtp_user' => '',
-            'smtp_pass' => '',
-            'sender_email' => Settings::get('sysmail'),
-            'sender_name' => Settings::get('title'),
-            'smtp_auto_tls' => true,
-            // hidden configuration
-            'smtp_debug' => 0,
-        ];
-    }
-
-    public function getAction(string $name): ?PluginAction
-    {
-        if ($name === 'config') {
-            return new ConfigAction($this);
-        }
-        return parent::getAction($name);
-    }
-
 }
