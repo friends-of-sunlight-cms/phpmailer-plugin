@@ -2,17 +2,16 @@
     "$schema": "../../../system/schema/extend.json",
     "name": "PhpMailer",
     "description": "Adds SMTP support for sending e-mails using the PHPMailer library.",
-    "version": "0.9.2",
+    "authors": [
+        {"name": "Friends of Sunlight CMS", "url": "https://github.com/friends-of-sunlight-cms/"}
+    ],
+    "version": "1.0.0",
     "environment": {
         "system": "^8.0"
     },
     "dependencies": {
-        "fosc-lib": ">=0.9.2"
+        "fosc-lib": ">=1.0.0"
     },
-    "authors": [
-        {"name": "Friends of Sunlight CMS", "url": "https://github.com/friends-of-sunlight-cms/"}
-    ],
-    "class": "PhpmailerPlugin",
     "config_defaults": {
         "use_smtp": true,
         "smtp_secure": "tls",
@@ -33,6 +32,6 @@
         "phpmailer": "lang"
     },
     "events": [
-        {"event": "mail.send", "method": "onMailSand"}
+        {"event": "mail.send", "script": "event/mail_send.php"}
     ]
 }
