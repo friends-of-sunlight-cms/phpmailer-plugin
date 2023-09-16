@@ -6,34 +6,92 @@ use Fosc\Feature\Plugin\Config\FieldGenerator;
 use PHPMailer\PHPMailer\PHPMailer;
 use Sunlight\Plugin\Action\ConfigAction as BaseConfigAction;
 use Sunlight\Router;
+use Sunlight\Settings;
+use Sunlight\Util\ConfigurationFile;
+use Sunlight\Util\Form;
 
 class ConfigAction extends BaseConfigAction
 {
+    private const SMTP_SECURE_MODE = [
+        'none' => 'none',
+        PHPMailer::ENCRYPTION_STARTTLS => 'TLS',
+        PHPMailer::ENCRYPTION_SMTPS => 'SSL',
+    ];
+
     protected function getFields(): array
     {
-        $langPrefix = '%p:phpmailer.config';
-
-        $gen = new FieldGenerator($this->plugin);
-        $gen->generateField('use_smtp', $langPrefix, '%checkbox')
-            ->generateField('smtp_secure', $langPrefix, '%select', [
-                'class' => 'inputmedium',
-                'select_options' => [
-                    'none' => 'none',
-                    PHPMailer::ENCRYPTION_STARTTLS => 'TLS',
-                    PHPMailer::ENCRYPTION_SMTPS => 'SSL',
-                ],
-            ], 'text')
-            ->generateField('smtp_auth', $langPrefix, '%checkbox')
-            ->generateField('smtp_port', $langPrefix, '%number', ['class' => 'inputmedium'])
-            ->generateField('smtp_host', $langPrefix, '%text', ['class' => 'inputmedium'])
-            ->generateField('smtp_user', $langPrefix, '%text', ['class' => 'inputmedium'])
-            ->generateField('smtp_pass', $langPrefix, '%password', ['class' => 'inputmedium']);
+        $config = $this->plugin->getConfig();
 
         $emailSetupLink = ' <a href="' . _e(Router::admin('settings', ['fragment' => 'settings_emails'])) . '" target="_blank" class="button"><img src="' . Router::path('admin/public/images/icons/action.png') . '" alt="setting" class="icon">' . _lang('phpmailer.config.email_setting') . '</a>';
-        $gen->generateField('sender_email', $langPrefix, '%text', ['class' => 'inputmedium', 'readonly'], 'text', ['after' => $emailSetupLink])
-            ->generateField('sender_name', $langPrefix, '%text', ['class' => 'inputmedium'])
-            ->generateField('smtp_auto_tls', $langPrefix, '%checkbox');
+        return [
+            'use_smtp' => [
+                'label' => _lang('phpmailer.config.use_smtp'),
+                'input' => '<input type="checkbox" name="config[use_smtp]" value="1"' . Form::activateCheckbox($config['use_smtp']) . '>',
+                'type' => 'checkbox'
 
-        return $gen->getFields();
+            ],
+            'smtp_secure' => [
+                'label' => _lang('phpmailer.config.smtp_secure'),
+                'input' => _buffer(function () use ($config) { ?>
+                    <select name="config[smtp_secure]" class="inputsmall">
+                        <?php foreach (self::SMTP_SECURE_MODE as $k => $v): ?>
+                            <option value="<?= _e($k) ?>"<?= Form::selectOption($config['smtp_secure'] === $k) ?>><?= _e($v) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                <?php }),
+            ],
+            'smtp_auth' => [
+                'label' => _lang('phpmailer.config.smtp_auth'),
+                'input' => '<input type="checkbox" name="config[smtp_auth]" value="1"' . Form::activateCheckbox($config['smtp_auth']) . '>',
+                'type' => 'checkbox'
+            ],
+            'smtp_port' => [
+                'label' => _lang('phpmailer.config.smtp_port'),
+                'input' => '<input type="number" name="config[smtp_port]" value="' . Form::restorePostValue('smtp_port', $config['smtp_port'], false) . '" class="inputmedium">',
+                'type' => 'text'
+            ],
+            'smtp_host' => [
+                'label' => _lang('phpmailer.config.smtp_host'),
+                'input' => '<input type="text" name="config[smtp_host]" value="' . Form::restorePostValue('smtp_host', $config['smtp_host'], false) . '" class="inputmedium">',
+                'type' => 'text'
+            ],
+            'smtp_user' => [
+                'label' => _lang('phpmailer.config.smtp_user'),
+                'input' => '<input type="text" name="config[smtp_user]" value="' . Form::restorePostValue('smtp_user', $config['smtp_user'], false) . '" class="inputmedium">',
+                'type' => 'text'
+            ],
+            'smtp_pass' => [
+                'label' => _lang('phpmailer.config.smtp_pass'),
+                'input' => '<input type="password" name="config[smtp_pass]" value="' . Form::restorePostValue('smtp_pass', $config['smtp_pass'], false) . '" class="inputmedium">',
+                'type' => 'text'
+            ],
+            'sender_email' => [
+                'label' => _lang('phpmailer.config.sender_email'),
+                'input' => '<input type="text" name="config[sender_email]" value="' . Form::restorePostValue('sender_email', Settings::get('sysmail'), false) . '" class="inputmedium" disabled>' . $emailSetupLink,
+            ],
+            'sender_name' => [
+                'label' => _lang('phpmailer.config.sender_name'),
+                'input' => '<input type="text" name="config[sender_name]" value="' . Form::restorePostValue('sender_name', $config['sender_name'], false) . '" class="inputmedium">',
+                'type' => 'text'
+            ],
+            'smtp_auto_tls' => [
+                'label' => _lang('phpmailer.config.smtp_auto_tls'),
+                'input' => '<input type="checkbox" name="config[smtp_auto_tls]" value="1"' . Form::activateCheckbox($config['smtp_auto_tls']) . '>',
+                'type' => 'checkbox'
+            ]
+        ];
+    }
+
+    protected function mapSubmittedValue(ConfigurationFile $config, string $key, array $field, $value): ?string
+    {
+        switch ($key) {
+            case 'smtp_secure':
+                $config[$key] = $value;
+                return null;
+            case 'sender_email':
+                $config[$key] = null; // always set to null, the name from the system settings will be used
+                return null;
+        }
+        return parent::mapSubmittedValue($config, $key, $field, $value); // TODO: Change the autogenerated stub
     }
 }
