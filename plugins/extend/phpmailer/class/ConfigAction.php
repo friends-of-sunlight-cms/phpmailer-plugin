@@ -13,6 +13,12 @@ use Sunlight\Util\Request;
 
 class ConfigAction extends BaseConfigAction
 {
+    private const SMTP_SECURE_MODE = [
+        'none' => 'none',
+        PHPMailer::ENCRYPTION_STARTTLS => 'TLS',
+        PHPMailer::ENCRYPTION_SMTPS => 'SSL',
+    ];
+    
     protected function getFields(): array
     {
         $config = $this->plugin->getConfig();
@@ -26,11 +32,7 @@ class ConfigAction extends BaseConfigAction
             ],
             'smtp_secure' => [
                 'label' => _lang('phpmailer.config.smtp_secure'),
-                'input' => Form::select('config[smtp_secure]', [
-                    'none' => 'none',
-                    'tls' => 'TLS',
-                    'ssl' => 'SSL',
-                ], $config['smtp_secure'], ['class' => 'inputsmall']),
+                'input' => Form::select('config[smtp_secure]', self::SMTP_SECURE_MODE, $config['smtp_secure'], ['class' => 'inputsmall']),
             ],
             'smtp_auth' => [
                 'label' => _lang('phpmailer.config.smtp_auth'),
