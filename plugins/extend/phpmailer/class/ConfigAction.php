@@ -9,6 +9,7 @@ use Sunlight\Router;
 use Sunlight\Settings;
 use Sunlight\Util\ConfigurationFile;
 use Sunlight\Util\Form;
+use Sunlight\Util\Request;
 
 class ConfigAction extends BaseConfigAction
 {
@@ -17,7 +18,7 @@ class ConfigAction extends BaseConfigAction
         PHPMailer::ENCRYPTION_STARTTLS => 'TLS',
         PHPMailer::ENCRYPTION_SMTPS => 'SSL',
     ];
-
+    
     protected function getFields(): array
     {
         $config = $this->plugin->getConfig();
@@ -26,57 +27,51 @@ class ConfigAction extends BaseConfigAction
         return [
             'use_smtp' => [
                 'label' => _lang('phpmailer.config.use_smtp'),
-                'input' => '<input type="checkbox" name="config[use_smtp]" value="1"' . Form::activateCheckbox($config['use_smtp']) . '>',
+                'input' => Form::input('checkbox', 'config[use_smtp]', '1', ['checked' => Form::loadCheckbox('config', $config['use_smtp'], 'use_smtp')]),
                 'type' => 'checkbox'
-
             ],
             'smtp_secure' => [
                 'label' => _lang('phpmailer.config.smtp_secure'),
-                'input' => _buffer(function () use ($config) { ?>
-                    <select name="config[smtp_secure]" class="inputsmall">
-                        <?php foreach (self::SMTP_SECURE_MODE as $k => $v): ?>
-                            <option value="<?= _e($k) ?>"<?= Form::selectOption($config['smtp_secure'] === $k) ?>><?= _e($v) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                <?php }),
+                'input' => Form::select('config[smtp_secure]', self::SMTP_SECURE_MODE, $config['smtp_secure'], ['class' => 'inputsmall']),
             ],
             'smtp_auth' => [
                 'label' => _lang('phpmailer.config.smtp_auth'),
-                'input' => '<input type="checkbox" name="config[smtp_auth]" value="1"' . Form::activateCheckbox($config['smtp_auth']) . '>',
+                'input' => Form::input('checkbox', 'config[smtp_auth]', '1', ['checked' => Form::loadCheckbox('config', $config['smtp_auth'], 'smtp_auth')]),
                 'type' => 'checkbox'
             ],
             'smtp_port' => [
                 'label' => _lang('phpmailer.config.smtp_port'),
-                'input' => '<input type="number" name="config[smtp_port]" value="' . Form::restorePostValue('smtp_port', $config['smtp_port'], false) . '" class="inputmedium">',
+                'input' => Form::input('number', 'config[smtp_port]', Request::post('smtp_port', $config['smtp_port']), ['checked' => Form::loadCheckbox('config', $config['smtp_port'], 'smtp_port'), 'class' => 'inputmedium']),
                 'type' => 'text'
             ],
             'smtp_host' => [
                 'label' => _lang('phpmailer.config.smtp_host'),
-                'input' => '<input type="text" name="config[smtp_host]" value="' . Form::restorePostValue('smtp_host', $config['smtp_host'], false) . '" class="inputmedium">',
+                'input' => Form::input('text', 'config[smtp_host]', Request::post('smtp_host', $config['smtp_host']), ['checked' => Form::loadCheckbox('config', $config['smtp_host'], 'smtp_host'), 'class' => 'inputmedium']),
                 'type' => 'text'
             ],
             'smtp_user' => [
                 'label' => _lang('phpmailer.config.smtp_user'),
-                'input' => '<input type="text" name="config[smtp_user]" value="' . Form::restorePostValue('smtp_user', $config['smtp_user'], false) . '" class="inputmedium">',
+                'input' => Form::input('text', 'config[smtp_user]', Request::post('smtp_user', $config['smtp_user']), ['checked' => Form::loadCheckbox('config', $config['smtp_user'], 'smtp_user'), 'class' => 'inputmedium']),
                 'type' => 'text'
             ],
             'smtp_pass' => [
                 'label' => _lang('phpmailer.config.smtp_pass'),
-                'input' => '<input type="password" name="config[smtp_pass]" value="' . Form::restorePostValue('smtp_pass', $config['smtp_pass'], false) . '" class="inputmedium">',
+                'input' => Form::input('password', 'config[smtp_pass]', Request::post('smtp_pass', $config['smtp_pass']), ['checked' => Form::loadCheckbox('config', $config['smtp_pass'], 'smtp_pass'), 'class' => 'inputmedium']),
                 'type' => 'text'
             ],
             'sender_email' => [
                 'label' => _lang('phpmailer.config.sender_email'),
-                'input' => '<input type="text" name="config[sender_email]" value="' . Form::restorePostValue('sender_email', Settings::get('sysmail'), false) . '" class="inputmedium" disabled>' . $emailSetupLink,
+                'input' => Form::input('text', 'config[sender_email]', Request::post('sender_email', Settings::get('sysmail')), ['checked' => false, 'class' => 'inputmedium', 'disabled' => true]) . $emailSetupLink,
+                'type' => 'text'
             ],
             'sender_name' => [
                 'label' => _lang('phpmailer.config.sender_name'),
-                'input' => '<input type="text" name="config[sender_name]" value="' . Form::restorePostValue('sender_name', $config['sender_name'], false) . '" class="inputmedium">',
+                'input' => Form::input('text', 'config[sender_name]', Request::post('sender_name', $config['sender_name']), ['checked' => Form::loadCheckbox('config', $config['sender_name'], 'sender_name'), 'class' => 'inputmedium']),
                 'type' => 'text'
             ],
             'smtp_auto_tls' => [
                 'label' => _lang('phpmailer.config.smtp_auto_tls'),
-                'input' => '<input type="checkbox" name="config[smtp_auto_tls]" value="1"' . Form::activateCheckbox($config['smtp_auto_tls']) . '>',
+                'input' => Form::input('checkbox', 'config[smtp_auto_tls]', '1', ['checked' => Form::loadCheckbox('config', $config['smtp_auto_tls'], 'smtp_auto_tls')]),
                 'type' => 'checkbox'
             ]
         ];
@@ -86,6 +81,10 @@ class ConfigAction extends BaseConfigAction
     {
         switch ($key) {
             case 'smtp_secure':
+            case 'smtp_host':
+            case 'smtp_user':
+            case 'smtp_pass':
+            case 'sender_name':
                 $config[$key] = $value;
                 return null;
             case 'sender_email':
