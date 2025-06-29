@@ -2,7 +2,6 @@
 
 namespace SunlightExtend\Phpmailer;
 
-use Fosc\Feature\Plugin\Config\FieldGenerator;
 use PHPMailer\PHPMailer\PHPMailer;
 use Sunlight\Plugin\Action\ConfigAction as BaseConfigAction;
 use Sunlight\Router;
